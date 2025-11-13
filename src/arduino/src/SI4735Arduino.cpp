@@ -7,6 +7,51 @@
 #include <Arduino.h>
 
 /**
+ * @ingroup   group07 Device start up
+ *
+ * @brief Starts the Si473X device.
+ *
+ * @details Use this function to start the device up with the parameters shown below.
+ * @details If the audio mode parameter is not entered, analog mode will be considered.
+ * @details You can use any Arduino digital pin. Be sure you are using less than 3.6V on Si47XX RST pin.
+ *
+ * ATTENTION: The document AN383; "Si47XX ANTENNA, SCHEMATIC, LAYOUT, AND DESIGN GUIDELINES"; rev 0.8; page 6; there is the following note:
+ *            Crystal and digital audio mode cannot be used at the same time. Populate R1 and remove C10, C11, and X1 when using digital audio.
+ *
+ * @param resetPin Digital Arduino Pin used to RESET de Si47XX device.
+ * @param ctsIntEnable CTS Interrupt Enable.
+ * @param defaultFunction is the mode you want the receiver starts.
+ * @param audioMode default SI473X_ANALOG_AUDIO (Analog Audio). Use SI473X_ANALOG_AUDIO or SI473X_DIGITAL_AUDIO.
+ * @param clockType 0 = Use external RCLK (crystal oscillator disabled); 1 = Use crystal oscillator
+ * @param gpo2Enable GPO2OE (GPO2 Output) 1 = Enable; 0 Disable (defult)
+ */
+void SI4735Base::setup(uint8_t resetPin, uint8_t ctsIntEnable, uint8_t defaultFunction, uint8_t audioMode, uint8_t clockType, uint8_t gpo2Enable)
+{
+    this->resetPin = resetPin;
+    this->ctsIntEnable = (ctsIntEnable != 0) ? 1 : 0; // Keeps old versions of the sketches running
+    this->gpo2Enable = gpo2Enable;
+    this->currentAudioMode = audioMode;
+
+    // Set the initial SI473X behavior
+    // CTSIEN   interruptEnable -> Interrupt anabled or disable;
+    // GPO2OEN  1 -> GPO2 Output Enable;
+    // PATCH    0 -> Boot normally;
+    // XOSCEN   clockType -> Use external crystal oscillator (XOSCEN_CRYSTAL) or reference clock (XOSCEN_RCLK);
+    // FUNC     defaultFunction = 0 = FM Receive; 1 = AM (LW/MW/SW) Receiver.
+    // OPMODE   SI473X_ANALOG_AUDIO or SI473X_DIGITAL_AUDIO.
+    setPowerUp(ctsIntEnable, gpo2Enable, 0, clockType, defaultFunction, audioMode);
+
+    if (audioMuteMcuPin >= 0)
+        setHardwareAudioMute(true); // If you are using external citcuit to mute the audio, it turns the audio mute
+
+    reset();
+
+    radioPowerUp();
+    setVolume(30); // Default volume level.
+    getFirmware();
+}
+
+/**
  * @ingroup group17 Patch and SSB support
  *
  * @brief Transfers the content of a patch stored in a array of bytes to the SI4735 device.
@@ -164,4 +209,80 @@ bool SI4735::downloadCompressedPatch(const uint8_t *ssb_patch_content, const uin
     }
     delayMicroseconds(250);
     return true;
+}
+
+/**
+ * @ingroup group07 Device Power Up
+ *
+ * @brief Powerup the Si47XX
+ *
+ * @details Before call this function call the setPowerUp to set up the parameters.
+ *
+ * @details Parameters you have to set up with setPowerUp
+ *
+ * | Parameter | Description |
+ * | --------- | ----------- |
+ * | CTSIEN    | Interrupt anabled or disabled |
+ * | GPO2OEN   | GPO2 Output Enable or disabled |
+ * | PATCH     | Boot normally or patch |
+ * | XOSCEN    | 0 (XOSCEN_RCLK) = external active crystal oscillator. 1 (XOSCEN_CRYSTAL) = passive crystal oscillator;  |
+ * | FUNC      | defaultFunction = 0 = FM Receive; 1 = AM (LW/MW/SW) Receiver |
+ * | OPMODE    | SI473X_ANALOG_AUDIO (B00000101) or SI473X_DIGITAL_AUDIO (B00001011) |
+ *
+ * ATTENTION: The document AN383; "Si47XX ANTENNA, SCHEMATIC, LAYOUT, AND DESIGN GUIDELINES"; rev 0.8; page 6; there is the following note:
+ *            Crystal and digital audio mode cannot be used at the same time. Populate R1 and remove C10, C11, and X1 when using digital audio.
+ *
+ * @see setMaxDelaySetFrequency()
+ * @see MAX_DELAY_AFTER_POWERUP
+ * @see XOSCEN_CRYSTAL
+ * @see XOSCEN_RCLK
+ * @see  SI4735Base::setPowerUp()
+ * @see  Si47XX PROGRAMMING GUIDE; AN332 (REV 1.0); pages 64, 129
+ */
+void SI4735Arduino::radioPowerUp(void)
+
+/**
+ * @ingroup group07 Device Power Down
+ *
+ * @brief Moves the device from powerup to powerdown mode.
+ *
+ * @details After Power Down command, only the Power Up command is accepted.
+ *
+ * @see Si47XX PROGRAMMING GUIDE; AN332 (REV 1.0); pages 67, 132
+ * @see radioPowerUp()
+ */
+void SI4735Base::powerDown(void)
+{
+    // Turns the external mute circuit on
+    if (audioMuteMcuPin >= 0)
+        setHardwareAudioMute(true);
+
+    waitToSend();
+    i2c.beginTransmission(deviceAddress);
+    i2c.write(POWER_DOWN);
+    i2c.endTransmission();
+    clock.waitMicroseconds(2500);
+}
+{
+    // clock.waitMicroseconds(1000);
+    waitToSend();
+    i2c.beginTransmission(deviceAddress);
+    i2c.write(POWER_UP);
+    i2c.write(powerUp.raw[0]); // Content of ARG1
+    i2c.write(powerUp.raw[1]); // COntent of ARG2
+    i2c.endTransmission();
+    // Delay at least 500 ms between powerup command and first tune command to wait for
+    // the oscillator to stabilize if XOSCEN is set and crystal is used as the RCLK.
+    waitToSend();
+    clock.wait(maxDelayAfterPowerUp);
+
+    // Turns the external mute circuit off
+    if (audioMuteMcuPin >= 0)
+        setHardwareAudioMute(false);
+
+    if (this->currentClockType == XOSCEN_RCLK)
+    {
+        setRefClock(this->refClock);
+        setRefClockPrescaler(this->refClockPrescale, this->refClockSourcePin);
+    }
 }

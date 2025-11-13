@@ -14,9 +14,9 @@ add_library(si4735-cpp STATIC ${SI4735_FILES})
 
 target_include_directories(si4735-cpp PUBLIC
   ${SI4735_LIB_SOURCE_DIR}
-  ${FLUX_CPP}/src
+  ${ONDA_CPP}/src
 )
-target_link_libraries(si4735-cpp PRIVATE flux-cpp)
+target_link_libraries(si4735-cpp PRIVATE onda)
 
 if(ENABLE_COVERAGE AND (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CX_COMPILER_ID MATCHES "Clang"))
   target_compile_options(si4735-cpp PRIVATE --coverage -O0 -g)

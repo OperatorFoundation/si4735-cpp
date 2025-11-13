@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include <flux-cpp.h>
+#include <onda.h>
 
 #define POWER_UP_FM 0  // FM
 #define POWER_UP_AM 1  // AM and SSB (if patch applyed)
@@ -1064,7 +1064,7 @@ typedef struct
  *
  * @author PU2CLR - Ricardo Lima Caratti
  */
-class SI4735
+class SI4735Base
 {
 protected:
     I2C& i2c;
@@ -1181,7 +1181,7 @@ protected:
     void getSsbAgcStatus();
 
 public:
-    SI4735(I2C& i2c, Clock& clock);
+    SI4735Base(I2C& i2c, Clock& clock);
     void reset(void);
     void waitToSend(void);
 
@@ -2780,47 +2780,6 @@ public:
     void setDeviceI2CAddress(uint8_t senPin);
     int16_t getDeviceI2CAddress(uint8_t resetPin);
     void setDeviceOtherI2CAddress(uint8_t i2cAddr);
-
-    /*******************************************************************************
-     * The functions below modify the clock frequency for I2C communication.
-     * 100kHz  is usually the baseline.
-     * Use one of these funcition if you have a problem on the default configuration.
-     *******************************************************************************/
-
-    /**
-     * @ingroup group18 MCU External Audio Mute
-     *
-     * @brief Sets the Audio Mute Mcu Pin
-     * @details This function sets the mcu digital pin you want to use to control the external audio mute circuit.
-     * @details Some users may be uncomfortable with the loud popping of the speaker during some transitions caused by some SI47XX commands.
-     * @details This problem occurs during the transition from the power down to power up.
-     * @details For example, when the user changes bands (FM to AM or AM to FM), the Si47XX devices must be powered down and powered up again.
-     * @details If you have a mute circuit attached to a pin on the MCU, then you can control the mute circuit from the MCU with this function.
-     *
-     * @see setHardwareAudioMute
-     * @param pin if 0 or greater, sets the MCU digital pin that controls the external circuit.
-     */
-    inline void setAudioMuteMcuPin(int8_t pin)
-    {
-        audioMuteMcuPin = pin;
-        pinMode(audioMuteMcuPin, OUTPUT);
-    };
-
-    /**
-     * @ingroup group18 MCU External Audio Mute
-     *
-     * @brief Sets the Hardware Audio Mute
-     * @details Turns the Hardware audio mute on or off
-     *
-     * @see setAudioMuteMcuPin
-     *
-     * @param on  True or false
-     */
-    inline void setHardwareAudioMute(bool on)
-    {
-        digitalWrite(audioMuteMcuPin, on);
-        delayMicroseconds(300);
-    }
 
     void convertToChar(uint16_t value, char *strValue, uint8_t len, uint8_t dot, uint8_t separator, bool remove_leading_zeros = true);
     void removeUnwantedChar(char *str, int size);
