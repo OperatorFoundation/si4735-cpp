@@ -10,6 +10,8 @@
 class SI4735Arduino : public SI4735Base
 {
   public:
+    SI4735Arduino(I2C& i2c, Clock& clock) : SI4735Base(i2c, clock) {}
+
     void setup(uint8_t resetPin, uint8_t ctsIntEnable, uint8_t defaultFunction, uint8_t audioMode, uint8_t clockType, uint8_t gpo2Enable);
     bool downloadPatch(const uint8_t *ssb_patch_content, const uint16_t ssb_patch_content_size);
     bool downloadCompressedPatch(const uint8_t *ssb_patch_content, const uint16_t ssb_patch_content_size, const uint16_t *cmd_0x15, const int16_t cmd_0x15_size);

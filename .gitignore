@@ -1,4 +1,5 @@
 # ignore system files
+.idea
 *.lst
 *.DS_Store
 *_Store
