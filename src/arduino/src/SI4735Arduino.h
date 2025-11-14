@@ -58,7 +58,7 @@ class SI4735Arduino : public SI4735Base
      *
      * @see Si47XX PROGRAMMING GUIDE; AN332 (REV 1.0);
      */
-    void SI4735Base::reset()
+    void SI4735Arduino::reset()
     {
       pinMode(resetPin, OUTPUT);
       clock.wait(10);

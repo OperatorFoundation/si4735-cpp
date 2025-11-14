@@ -25,7 +25,7 @@
  * @param clockType 0 = Use external RCLK (crystal oscillator disabled); 1 = Use crystal oscillator
  * @param gpo2Enable GPO2OE (GPO2 Output) 1 = Enable; 0 Disable (defult)
  */
-void SI4735Base::setup(uint8_t resetPin, uint8_t ctsIntEnable, uint8_t defaultFunction, uint8_t audioMode, uint8_t clockType, uint8_t gpo2Enable)
+void SI4735Arduino::setup(uint8_t resetPin, uint8_t ctsIntEnable, uint8_t defaultFunction, uint8_t audioMode, uint8_t clockType, uint8_t gpo2Enable)
 {
     this->resetPin = resetPin;
     this->ctsIntEnable = (ctsIntEnable != 0) ? 1 : 0; // Keeps old versions of the sketches running
@@ -91,7 +91,7 @@ void SI4735Base::setup(uint8_t resetPin, uint8_t ctsIntEnable, uint8_t defaultFu
  *
  *  @return false if an error is found.
  */
-bool SI4735::downloadPatch(const uint8_t *ssb_patch_content, const uint16_t ssb_patch_content_size)
+bool SI4735Arduino::downloadPatch(const uint8_t *ssb_patch_content, const uint16_t ssb_patch_content_size)
 
 /**
  * @ingroup group17 Patch and SSB support
@@ -134,7 +134,7 @@ bool SI4735::downloadPatch(const uint8_t *ssb_patch_content, const uint16_t ssb_
  * @param cmd_0x15                  Array of lines where the first byte of each patch content line is 0x15
  * @param cmd_0x15_size             Array size
  */
-bool SI4735::downloadCompressedPatch(const uint8_t *ssb_patch_content, const uint16_t ssb_patch_content_size, const uint16_t *cmd_0x15, const int16_t cmd_0x15_size)
+bool SI4735Arduino::downloadCompressedPatch(const uint8_t *ssb_patch_content, const uint16_t ssb_patch_content_size, const uint16_t *cmd_0x15, const int16_t cmd_0x15_size)
 {
     uint8_t cmd, content;
     uint16_t command_line = 0;
@@ -251,7 +251,7 @@ void SI4735Arduino::radioPowerUp(void)
  * @see Si47XX PROGRAMMING GUIDE; AN332 (REV 1.0); pages 67, 132
  * @see radioPowerUp()
  */
-void SI4735Base::powerDown(void)
+void SI4735Arduino::powerDown(void)
 {
     // Turns the external mute circuit on
     if (audioMuteMcuPin >= 0)
